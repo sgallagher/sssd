@@ -41,6 +41,7 @@
 #include "providers/dp_dyndns.h"
 #include "providers/ad/ad_subdomains.h"
 #include "providers/ad/ad_domain_info.h"
+#include "providers/ad/ad_gpo.h"
 
 struct ad_options *ad_options = NULL;
 
@@ -465,6 +466,9 @@ sssm_ad_access_init(struct be_ctx *bectx,
                strerror(ret));
         goto fail;
     }
+
+    /* setup logging for gpo child */
+    gpo_child_init();
 
     *ops = &ad_access_ops;
     *pvt_data = access_ctx;

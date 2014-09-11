@@ -1229,9 +1229,6 @@ ad_gpo_access_send(TALLOC_CTX *mem_ctx,
     hash_value_t val;
     enum gpo_map_type gpo_map_type;
 
-    /* setup logging for gpo child */
-    gpo_child_init();
-
     req = tevent_req_create(mem_ctx, &state, struct ad_gpo_access_state);
     if (req == NULL) {
         DEBUG(SSSDBG_CRIT_FAILURE, "tevent_req_create() failed\n");

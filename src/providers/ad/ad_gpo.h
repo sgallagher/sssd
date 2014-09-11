@@ -23,6 +23,16 @@
 #ifndef AD_GPO_H_
 #define AD_GPO_H_
 
+
+/* ==== From ad_gpo.c ====*/
+
+/* gpo_child_init
+ * Set up debug logs for the child process
+ */
+errno_t gpo_child_init(void);
+
+
+
 /*
  * This pair of functions provides client-side GPO processing.
  *
@@ -41,6 +51,7 @@
  * - sending the GPO DNs to the CSE processing engine for policy application
  * - policy application currently consists of HBAC-like functionality
  */
+
 struct tevent_req *
 ad_gpo_access_send(TALLOC_CTX *mem_ctx,
                    struct tevent_context *ev,
