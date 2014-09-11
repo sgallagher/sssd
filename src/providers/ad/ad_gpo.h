@@ -51,4 +51,14 @@ ad_gpo_access_send(TALLOC_CTX *mem_ctx,
 
 errno_t ad_gpo_access_recv(struct tevent_req *req);
 
+
+/* ==== From ad_gpo_ndr.c ==== */
+#include <ndr.h>
+#include <gen_ndr/security.h>
+
+enum ndr_err_code
+ad_gpo_ndr_pull_security_descriptor(struct ndr_pull *ndr,
+                                    int ndr_flags,
+                                    struct security_descriptor *r);
+
 #endif /* AD_GPO_H_ */

@@ -3103,10 +3103,6 @@ ad_gpo_parse_machine_ext_names(TALLOC_CTX *mem_ctx,
     return ret;
 }
 
-enum ndr_err_code
-ad_gpo_ndr_pull_security_descriptor(struct ndr_pull *ndr, int ndr_flags,
-                                    struct security_descriptor *r);
-
 /*
  * This function parses the input data blob and assigns the resulting
  * security_descriptor object to the _gpo_sd output parameter.

@@ -1885,6 +1885,7 @@ ad_access_filter_tests_SOURCES = \
     src/tests/cmocka/test_ad_access_filter.c
 ad_access_filter_tests_CFLAGS = \
     $(AM_CFLAGS) \
+    $(NDR_NBT_CFLAGS) \
     -DUNIT_TESTING
 ad_access_filter_tests_LDADD = \
     $(PAM_LIBS) \
