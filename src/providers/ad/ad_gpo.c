@@ -1245,25 +1245,35 @@ ad_gpo_access_send(TALLOC_CTX *mem_ctx,
     key.str = talloc_strdup(state, service);
 
     hret = hash_lookup(ctx->gpo_map_options_table, &key, &val);
-    if (hret != HASH_SUCCESS && hret != HASH_ERROR_KEY_NOT_FOUND) {
+    talloc_zfree(key.str);
+
+    switch (hret) {
+    case HASH_SUCCESS:
+        /* We were able to get the explicit mapping.
+         * Assign it and continue.
+         */
+        gpo_map_type = (enum gpo_map_type) val.i;
+        break;
+    case HASH_ERROR_KEY_NOT_FOUND:
+        /* if service isn't mapped, map it to value of
+         * ad_gpo_default_right option
+         */
+        DEBUG(SSSDBG_TRACE_FUNC, "using default right\n");
+        gpo_map_type = ctx->gpo_default_right;
+        break;
+    default:
+        /* Something went wrong reading from the hash table */
         DEBUG(SSSDBG_OP_FAILURE, "Error checking hash table: [%s]\n",
               hash_error_string(hret));
         ret = EINVAL;
         goto immediately;
     }
 
-    /* if service isn't mapped, map it to value of ad_gpo_default_right option */
-    if (hret == HASH_ERROR_KEY_NOT_FOUND) {
-        DEBUG(SSSDBG_TRACE_FUNC, "using default right\n");
-        gpo_map_type = ctx->gpo_default_right;
-    } else {
-        gpo_map_type = (enum gpo_map_type) val.i;
-    }
-
     DEBUG(SSSDBG_TRACE_FUNC, "service %s maps to %s\n", service,
           gpo_map_type_string(gpo_map_type));
 
     if (gpo_map_type == GPO_MAP_PERMIT) {
+        /* Special-case: immediately grant access */
         ret = EOK;
         goto immediately;
     }
@@ -1271,9 +1281,13 @@ ad_gpo_access_send(TALLOC_CTX *mem_ctx,
     if (gpo_map_type == GPO_MAP_DENY) {
         switch (ctx->gpo_access_control_mode) {
         case GPO_ACCESS_CONTROL_ENFORCING:
+            /* Special-case: immediately deny access */
             ret = EACCES;
             goto immediately;
         case GPO_ACCESS_CONTROL_PERMISSIVE:
+            /* Special-case: immediately notify that access
+             * would have been denied in enforcing mode.
+             */
             DEBUG(SSSDBG_TRACE_FUNC, "access denied: permissive mode\n");
             sss_log_ext(SSS_LOG_WARNING, LOG_AUTHPRIV, "Warning: user would " \
                         "have been denied GPO-based logon access if the " \
@@ -1282,6 +1296,7 @@ ad_gpo_access_send(TALLOC_CTX *mem_ctx,
             ret = EOK;
             goto immediately;
         default:
+            /* Should never get here... */
             ret = EINVAL;
             goto immediately;
         }
