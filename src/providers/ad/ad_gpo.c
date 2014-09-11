@@ -140,45 +140,50 @@ enum ace_eval_status {
     AD_GPO_ACE_NEUTRAL
 };
 
-struct tevent_req *ad_gpo_process_som_send(TALLOC_CTX *mem_ctx,
-                                           struct tevent_context *ev,
-                                           struct sdap_id_conn_ctx *conn,
-                                           struct ldb_context *ldb_ctx,
-                                           struct sdap_id_op *sdap_op,
-                                           struct sdap_options *opts,
-                                           int timeout,
-                                           const char *target_dn,
-                                           const char *domain_name);
-int ad_gpo_process_som_recv(struct tevent_req *req,
-                            TALLOC_CTX *mem_ctx,
-                            struct gp_som ***som_list);
+static struct tevent_req *
+ad_gpo_process_som_send(TALLOC_CTX *mem_ctx,
+                        struct tevent_context *ev,
+                        struct sdap_id_conn_ctx *conn,
+                        struct ldb_context *ldb_ctx,
+                        struct sdap_id_op *sdap_op,
+                        struct sdap_options *opts,
+                        int timeout,
+                        const char *target_dn,
+                        const char *domain_name);
+static int
+ad_gpo_process_som_recv(struct tevent_req *req,
+                        TALLOC_CTX *mem_ctx,
+                        struct gp_som ***som_list);
 
-struct tevent_req *ad_gpo_process_gpo_send(TALLOC_CTX *mem_ctx,
-                                           struct tevent_context *ev,
-                                           struct sdap_id_op *sdap_op,
-                                           struct sdap_options *opts,
-                                           char *server_hostname,
-                                           int timeout,
-                                           struct gp_som **som_list);
-int ad_gpo_process_gpo_recv(struct tevent_req *req,
-                            TALLOC_CTX *mem_ctx,
-                            struct gp_gpo ***candidate_gpos,
-                            int *num_candidate_gpos);
-struct tevent_req *ad_gpo_process_cse_send(TALLOC_CTX *mem_ctx,
-                                           struct tevent_context *ev,
-                                           bool send_to_child,
-                                           struct sss_domain_info *domain,
-                                           const char *gpo_guid,
-                                           const char *smb_server,
-                                           const char *smb_share,
-                                           const char *smb_path,
-                                           const char *smb_cse_suffix,
-                                           int cached_gpt_version,
-                                           int gpo_timeout_option);
-int ad_gpo_process_cse_recv(struct tevent_req *req,
-                            TALLOC_CTX *mem_ctx,
-                            int *_sysvol_gpt_version,
-                            const char **_policy_filename);
+static struct tevent_req *
+ad_gpo_process_gpo_send(TALLOC_CTX *mem_ctx,
+                        struct tevent_context *ev,
+                        struct sdap_id_op *sdap_op,
+                        struct sdap_options *opts,
+                        char *server_hostname,
+                        int timeout,
+                        struct gp_som **som_list);
+static int
+ad_gpo_process_gpo_recv(struct tevent_req *req,
+                        TALLOC_CTX *mem_ctx,
+                        struct gp_gpo ***candidate_gpos,
+                        int *num_candidate_gpos);
+static struct tevent_req *
+ad_gpo_process_cse_send(TALLOC_CTX *mem_ctx,
+                        struct tevent_context *ev,
+                        bool send_to_child,
+                        struct sss_domain_info *domain,
+                        const char *gpo_guid,
+                        const char *smb_server,
+                        const char *smb_share,
+                        const char *smb_path,
+                        const char *smb_cse_suffix,
+                        int cached_gpt_version,
+                        int gpo_timeout_option);
+static int ad_gpo_process_cse_recv(struct tevent_req *req,
+                                   TALLOC_CTX *mem_ctx,
+                                   int *_sysvol_gpt_version,
+                                   const char **_policy_filename);
 
 /* == ad_gpo_parse_map_options and helpers ==================================*/
 
@@ -1146,7 +1151,7 @@ ad_gpo_access_check(TALLOC_CTX *mem_ctx,
 }
 
 #define GPO_CHILD_LOG_FILE "gpo_child"
-static errno_t gpo_child_init(void)
+errno_t gpo_child_init(void)
 {
     int ret;
     FILE *debug_filep;
@@ -2350,7 +2355,7 @@ static void ad_gpo_get_som_attrs_done(struct tevent_req *subreq);
  * SOM object. Note that it is perfectly valid for there to be *no* GPOs
  * linked to a SOM object.
  */
-struct tevent_req *
+static struct tevent_req *
 ad_gpo_process_som_send(TALLOC_CTX *mem_ctx,
                         struct tevent_context *ev,
                         struct sdap_id_conn_ctx *conn,
@@ -2705,7 +2710,7 @@ ad_gpo_get_som_attrs_done(struct tevent_req *subreq)
     }
 }
 
-int
+static int
 ad_gpo_process_som_recv(struct tevent_req *req,
                         TALLOC_CTX *mem_ctx,
                         struct gp_som ***som_list)
@@ -3163,7 +3168,7 @@ static void ad_gpo_get_gpo_attrs_done(struct tevent_req *subreq);
  * are used to retrieve certain LDAP attributes of each GPO object, that are
  * parsed into the various fields of the gp_gpo object.
  */
-struct tevent_req *
+static struct tevent_req *
 ad_gpo_process_gpo_send(TALLOC_CTX *mem_ctx,
                         struct tevent_context *ev,
                         struct sdap_id_op *sdap_op,
@@ -3462,7 +3467,7 @@ ad_gpo_get_gpo_attrs_done(struct tevent_req *subreq)
     }
 }
 
-int
+static int
 ad_gpo_process_gpo_recv(struct tevent_req *req,
                         TALLOC_CTX *mem_ctx,
                         struct gp_gpo ***candidate_gpos,
@@ -3833,7 +3838,7 @@ static void gpo_cse_done(struct tevent_req *subreq);
  * referenced by the input smb_uri, and uses the parsed results to populate the
  * state's list of allowed_sids and denied_sids.
  */
-struct tevent_req *
+static struct tevent_req *
 ad_gpo_process_cse_send(TALLOC_CTX *mem_ctx,
                         struct tevent_context *ev,
                         bool send_to_child,
@@ -4027,10 +4032,10 @@ static void gpo_cse_done(struct tevent_req *subreq)
     return;
 }
 
-int ad_gpo_process_cse_recv(struct tevent_req *req,
-                            TALLOC_CTX *mem_ctx,
-                            int *_sysvol_gpt_version,
-                            const char **_policy_filename)
+static int ad_gpo_process_cse_recv(struct tevent_req *req,
+                                   TALLOC_CTX *mem_ctx,
+                                   int *_sysvol_gpt_version,
+                                   const char **_policy_filename)
 {
     struct ad_gpo_process_cse_state *state;
 
