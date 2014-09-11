@@ -1265,8 +1265,6 @@ ad_gpo_access_send(TALLOC_CTX *mem_ctx,
 
     if (gpo_map_type == GPO_MAP_PERMIT) {
         ret = EOK;
-        tevent_req_done(req);
-        tevent_req_post(req, ev);
         goto immediately;
     }
 
@@ -1282,8 +1280,6 @@ ad_gpo_access_send(TALLOC_CTX *mem_ctx,
                         "ad_gpo_access_control option were set to enforcing " \
                         "mode.");
             ret = EOK;
-            tevent_req_done(req);
-            tevent_req_post(req, ev);
             goto immediately;
         default:
             ret = EINVAL;
@@ -1327,8 +1323,8 @@ ad_gpo_access_send(TALLOC_CTX *mem_ctx,
     if (lud->lud_host == NULL) {
         DEBUG(SSSDBG_CRIT_FAILURE,
               "The LDAP URI (%s) did not contain a host name\n", server_uri);
-        ldap_free_urldesc(lud);
         ret = EINVAL;
+        ldap_free_urldesc(lud);
         goto immediately;
     }
 
@@ -1350,14 +1346,17 @@ ad_gpo_access_send(TALLOC_CTX *mem_ctx,
     }
     tevent_req_set_callback(subreq, ad_gpo_connect_done, req);
 
-    ret = EOK;
+    /* Return control to the mainloop to wait for the SDAP connection */
+    return req;
 
 immediately:
-
-    if (ret != EOK) {
+    /* We have a final result or an error, return it now */
+    if (ret == EOK) {
+        tevent_req_done(req);
+    } else {
         tevent_req_error(req, ret);
-        tevent_req_post(req, ev);
     }
+    tevent_req_post(req, ev);
 
     return req;
 }
@@ -1510,7 +1509,6 @@ ad_gpo_connect_done(struct tevent_req *subreq)
 
             if (ret == EOK) {
                 DEBUG(SSSDBG_TRACE_FUNC, "process_offline_gpos succeeded\n");
-                tevent_req_done(req);
                 goto done;
             } else {
                 DEBUG(SSSDBG_OP_FAILURE,
@@ -1521,6 +1519,7 @@ ad_gpo_connect_done(struct tevent_req *subreq)
         }
     }
 
+    /* The computer identity is treated as a user with a '$' suffix in AD */
     sam_account_name = talloc_asprintf(state, "%s$", state->ad_hostname);
     if (sam_account_name == NULL) {
         ret = ENOMEM;
@@ -1565,11 +1564,14 @@ ad_gpo_connect_done(struct tevent_req *subreq)
 
     tevent_req_set_callback(subreq, ad_gpo_target_dn_retrieval_done, req);
 
-    ret = EOK;
+    /* Return to the mainloop and wait for the SDAP lookup to complete */
+    return;
 
  done:
-
-    if (ret != EOK) {
+    /* We have a final result or error here */
+    if (ret == EOK) {
+        tevent_req_done(req);
+    } else {
         tevent_req_error(req, ret);
     }
 }
@@ -1598,7 +1600,7 @@ ad_gpo_target_dn_retrieval_done(struct tevent_req *subreq)
               "Unable to get policy target's DN: [%d](%s)\n",
                ret, sss_strerror(ret));
         ret = ENOENT;
-        goto done;
+        goto error;
     }
 
     /* make sure there is only one non-NULL reply returned */
@@ -1606,15 +1608,15 @@ ad_gpo_target_dn_retrieval_done(struct tevent_req *subreq)
     if (reply_count < 1) {
         DEBUG(SSSDBG_OP_FAILURE, "No DN retrieved for policy target.\n");
         ret = ENOENT;
-        goto done;
+        goto error;
     } else if (reply_count > 1) {
         DEBUG(SSSDBG_OP_FAILURE, "Multiple replies for policy target\n");
         ret = ERR_INTERNAL;
-        goto done;
-    } else if (reply == NULL) {
+        goto error;
+    } else if (reply == NULL || reply[0] == NULL) {
         DEBUG(SSSDBG_OP_FAILURE, "reply_count is 1, but reply is NULL\n");
         ret = ERR_INTERNAL;
-        goto done;
+        goto error;
     }
 
     /* reply[0] holds requested attributes of single reply */
@@ -1623,26 +1625,28 @@ ad_gpo_target_dn_retrieval_done(struct tevent_req *subreq)
         DEBUG(SSSDBG_OP_FAILURE,
               "sysdb_attrs_get_string failed: [%d](%s)\n",
                ret, sss_strerror(ret));
-        goto done;
+        goto error;
     }
+
     state->target_dn = talloc_steal(state, target_dn);
     if (state->target_dn == NULL) {
         ret = ENOMEM;
-        goto done;
+        goto error;
     }
 
     ret = sysdb_attrs_get_uint32_t(reply[0], AD_AT_UAC, &uac);
+    talloc_zfree(reply);
     if (ret != EOK) {
         DEBUG(SSSDBG_OP_FAILURE,
               "sysdb_attrs_get_uint32_t failed: [%d](%s)\n",
                ret, sss_strerror(ret));
-        goto done;
+        goto error;
     }
 
     /* we only support computer policy targets, not users */
     if (!(uac & UAC_WORKSTATION_TRUST_ACCOUNT)) {
         ret = EINVAL;
-        goto done;
+        goto error;
     }
 
     subreq = ad_gpo_process_som_send(state,
@@ -1656,18 +1660,16 @@ ad_gpo_target_dn_retrieval_done(struct tevent_req *subreq)
                                      state->domain->name);
     if (subreq == NULL) {
         ret = ENOMEM;
-        goto done;
+        goto error;
     }
 
     tevent_req_set_callback(subreq, ad_gpo_process_som_done, req);
 
-    ret = EOK;
+    /* Return to the mainloop and wait for the GPO lookup to complete */
+    return;
 
- done:
-
-    if (ret != EOK) {
-        tevent_req_error(req, ret);
-    }
+error:
+    tevent_req_error(req, ret);
 }
 
 static void
