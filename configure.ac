@@ -138,6 +138,7 @@ WITH_NFS
 WITH_NFS_LIB_PATH
 WITH_LIBWBCLIENT
 WITH_SSSD_USER
+WITH_AD_GPO_DEFAULT
 
 m4_include([src/external/pkg.m4])
 m4_include([src/external/libpopt.m4])

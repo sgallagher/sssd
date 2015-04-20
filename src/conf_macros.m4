@@ -786,3 +786,20 @@ AC_DEFUN([WITH_SSSD_USER],
     AC_DEFINE_UNQUOTED(SSSD_USER, "$SSSD_USER", ["The default user to run SSSD as"])
     AM_CONDITIONAL([SSSD_USER], [test x"$with_sssd_user" != x])
   ])
+
+  AC_DEFUN([WITH_AD_GPO_DEFAULT],
+    [ AC_ARG_WITH([ad-gpo-default],
+                  [AS_HELP_STRING([--with-ad-gpo-default=[enforcing|permissive|disabled]],
+                                  [Default enforcing level for AD GPO access-control (enforcing)]
+                                 )
+                  ]
+                 )
+      GPO_DEFAULT=enforcing
+
+      if test x"$with_gpo_default" != x; then
+          GPO_DEFAULT=$with_gpo_default
+      fi
+
+      AC_SUBST(GPO_DEFAULT)
+      AC_DEFINE_UNQUOTED(AD_GPO_ACCESS_MODE_DEFAULT, "$GPO_DEFAULT", ["The default enforcing level for AD GPO access-control"])
+  ])
