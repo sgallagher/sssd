@@ -3477,7 +3477,9 @@ ad_gpo_get_gpo_attrs_step(struct tevent_req *req)
 }
 
 static errno_t
-ad_gpo_sd_process_attrs(struct tevent_req *req, struct sysdb_attrs *results);
+ad_gpo_sd_process_attrs(struct tevent_req *req,
+                        char *smb_host,
+                        struct sysdb_attrs *result);
 void
 ad_gpo_get_sd_referral_done(struct tevent_req *subreq);
 
@@ -3492,6 +3494,7 @@ ad_gpo_get_sd_referral_send(TALLOC_CTX *mem_ctx,
 errno_t
 ad_gpo_get_sd_referral_recv(struct tevent_req *req,
                             TALLOC_CTX *mem_ctx,
+                            char **_smb_host,
                             struct sysdb_attrs **_reply);
 
 static void
@@ -3554,7 +3557,7 @@ ad_gpo_get_gpo_attrs_done(struct tevent_req *subreq)
         goto done;
     }
 
-    ret = ad_gpo_sd_process_attrs(req, results[0]);
+    ret = ad_gpo_sd_process_attrs(req, state->server_hostname, results[0]);
 
 done:
 
@@ -3571,13 +3574,14 @@ ad_gpo_get_sd_referral_done(struct tevent_req *subreq)
     errno_t ret;
     int dp_error;
     struct sysdb_attrs *reply;
+    char *smb_host;
 
     struct tevent_req *req =
             tevent_req_callback_data(subreq, struct tevent_req);
     struct ad_gpo_process_gpo_state *state =
             tevent_req_data(req, struct ad_gpo_process_gpo_state);
 
-    ret = ad_gpo_get_sd_referral_recv(subreq, state, &reply);
+    ret = ad_gpo_get_sd_referral_recv(subreq, state, &smb_host, &reply);
     talloc_zfree(subreq);
     if (ret != EOK) {
         /* Terminate the sdap_id_op */
@@ -3591,7 +3595,7 @@ ad_gpo_get_sd_referral_done(struct tevent_req *subreq)
     }
 
     /* Lookup succeeded. Process it */
-    ret = ad_gpo_sd_process_attrs(req, reply);
+    ret = ad_gpo_sd_process_attrs(req, smb_host, reply);
 
 done:
 
@@ -3603,7 +3607,9 @@ done:
 }
 
 static errno_t
-ad_gpo_sd_process_attrs(struct tevent_req *req, struct sysdb_attrs *result)
+ad_gpo_sd_process_attrs(struct tevent_req *req,
+                        char *smb_host,
+                        struct sysdb_attrs *result)
 {
     struct ad_gpo_process_gpo_state *state;
     struct gp_gpo *gp_gpo;
@@ -3649,7 +3655,7 @@ ad_gpo_sd_process_attrs(struct tevent_req *req, struct sysdb_attrs *result)
 
     file_sys_path = talloc_strdup(gp_gpo, raw_file_sys_path);
 
-    ret = ad_gpo_extract_smb_components(gp_gpo, state->server_hostname,
+    ret = ad_gpo_extract_smb_components(gp_gpo, smb_host,
                                         file_sys_path, &gp_gpo->smb_server,
                                         &gp_gpo->smb_share, &gp_gpo->smb_path);
     if (ret != EOK) {
@@ -4127,6 +4133,7 @@ struct ad_gpo_get_sd_referral_state {
     struct sdap_id_op *ref_op;
     int timeout;
     char *gpo_dn;
+    char *smb_host;
 
 
     struct sysdb_attrs *reply;
@@ -4173,6 +4180,7 @@ ad_gpo_get_sd_referral_send(TALLOC_CTX *mem_ctx,
     if (!state->gpo_dn) {
         DEBUG(SSSDBG_OP_FAILURE,
               "Could not copy referral DN (%s)!\n", lud->lud_dn);
+        ldap_free_urldesc(lud);
         ret = ENOMEM;
         goto done;
     }
@@ -4198,6 +4206,25 @@ ad_gpo_get_sd_referral_send(TALLOC_CTX *mem_ctx,
         DEBUG(SSSDBG_OP_FAILURE,
               "No connection for %s\n", state->ref_domain->name);
         ret = EINVAL;
+        goto done;
+    }
+
+    /* Get the hostname we're going to connect to.
+     * We'll need this later for performing the samba
+     * connection.
+     */
+    ret = ldap_url_parse(state->conn->service->uri, &lud);
+    if (ret != LDAP_SUCCESS) {
+        DEBUG(SSSDBG_CRIT_FAILURE,
+              "Failed to parse service URI (%s)!\n", referral);
+        ret = EINVAL;
+        goto done;
+    }
+
+    state->smb_host = talloc_strdup(state, lud->lud_host);
+    ldap_free_urldesc(lud);
+    if (!state->smb_host) {
+        ret = ENOMEM;
         goto done;
     }
 
@@ -4331,6 +4358,7 @@ done:
 errno_t
 ad_gpo_get_sd_referral_recv(struct tevent_req *req,
                             TALLOC_CTX *mem_ctx,
+                            char **_smb_host,
                             struct sysdb_attrs **_reply)
 {
     struct ad_gpo_get_sd_referral_state *state =
@@ -4338,6 +4366,7 @@ ad_gpo_get_sd_referral_recv(struct tevent_req *req,
 
     TEVENT_REQ_RETURN_ON_ERROR(req);
 
+    *_smb_host = talloc_steal(mem_ctx, state->smb_host);
     *_reply = talloc_steal(mem_ctx, state->reply);
 
     return EOK;
