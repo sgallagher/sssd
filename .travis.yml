@@ -1,0 +1,31 @@
+env:
+  global:
+    # COVERITY_SCAN_TOKEN
+    # ** specific to your project **
+    - secure: "B6au3s0qWDzmUEcYqlFapFCN/2P31mOMFIgP+jzaoLP6sZQtEzGcqfcHeUxCuVXjuQuyCfI3GDDWlHl2PHNndQCXtbjZGPmf0QRGAcUcYivvkkCmVZwYz9DckTxERW+itahXE07qWlU/9GvnZNSPw4OnjCkotSzuGk3G9HuXm0i2tlaE7JwACmRHgGCwbmK36iNYgjtVswNi7lghUsn9vCfGeBHpk9a0yYkAAxzQHTunnuPho89vmKSc+kMc+QfIee7TFrPqaXJdk2N5m77o/5XNgKbckglBeSZdpUOyDBk6fkfmoowRwuMGqz9SnM+mNtIWB2CcOfTOuYRvbtK2vRhlAwAm6R4FFfk1MJLrf27zFIMEQIMIx9n3SKxRHTmJRr+Iy25bD+dfxwbQd5W7zwlE6esaeIkACg0D6pPDVgwB+Qm+YVrrC2FeuRIHPOr/uybfRL2Q2cGLEmNYPPMFlJTKc7qx1OeUHdzovGK2kE8zUz5T6cUzXpEeLrsyrDjEAEXK61mMUTHTExuaJNQ8h5GXk5OWLeBDeIzTiU1aaLmFLqbn8OU3uHLxbokRg7DQqzYTtLQLrqA9+Sw4oG/WJj8kPOUhA+QA6O3iE9v9K7py2uPyFmoAMYW1oicK1MSbcYQ+9wNVYSUJgUbhcx36Dw5UWZN4sntfVxXiMb24DXw="
+
+addons:
+  coverity_scan:
+
+    # GitHub project metadata
+    # ** specific to your project **
+    project:
+      name: sgallagher/sssd
+      version: 1.12
+      description: System Security Services Daemon
+
+    # Where email notification of build analysis results will be sent
+    notification_email: sgallagh@redhat.com
+
+    # Commands to prepare for build_command
+    # ** likely specific to your build **
+    build_command_prepend: /bin/true
+
+    # The command that will be added as an argument to "cov-build" to compile your project for analysis,
+    # ** likely specific to your build **
+    build_command: contrib/ci/run -e
+
+    # Pattern to match selecting branches that will run analysis. We recommend leaving this set to 'coverity_scan'.
+    # Take care in resource usage, and consider the build frequency allowances per
+    #   https://scan.coverity.com/faq#frequency
+    branch_pattern: travis
