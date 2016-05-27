@@ -8,8 +8,6 @@
 
 #define DFL_BURST_RATE 1
 
-typedef int (*snotify_cb_fn)(const char *filename, void *pvt);
-
 struct snotify_cb_ctx {
     int wd;
     snotify_cb_fn fn;

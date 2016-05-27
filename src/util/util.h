@@ -645,4 +645,17 @@ int sss_unique_filename(TALLOC_CTX *owner, char *path_tmpl);
 int setup_watchdog(struct tevent_context *ev, int interval);
 void teardown_watchdog(void);
 
+/* From inotify.c */
+typedef int (*snotify_cb_fn)(const char *filename, void *pvt);
+
+struct snotify_ctx *snotify_create(TALLOC_CTX *mem_ctx,
+                                   struct tevent_context *ev,
+                                   const char *filename,
+                                   int burst_rate);
+
+struct snotify_cb_ctx *snotify_add_watch(struct snotify_ctx *snctx,
+                                         uint32_t mask,
+                                         snotify_cb_fn fn,
+                                         void *pvt);
+
 #endif /* __SSSD_UTIL_H__ */

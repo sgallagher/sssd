@@ -327,7 +327,9 @@ sssdlib_LTLIBRARIES = \
     libsss_ldap.la \
     libsss_krb5.la \
     libsss_proxy.la \
-    libsss_simple.la
+    libsss_simple.la \
+    libsss_files.la \
+    $(NULL)
 
 if BUILD_SAMBA
 sssdlib_LTLIBRARIES += \
@@ -3346,6 +3348,21 @@ libsss_proxy_la_LIBADD = \
 libsss_proxy_la_LDFLAGS = \
     -avoid-version \
     -module
+
+libsss_files_la_SOURCES = \
+    src/providers/files/files_init.c \
+    src/providers/files/files_ops.c \
+    $(NULL)
+libsss_files_la_CFLAGS = \
+    $(AM_CFLAGS) \
+    $(NULL)
+libsss_files_la_LIBADD = \
+    $(PAM_LIBS) \
+    $(NULL)
+libsss_files_la_LDFLAGS = \
+    -avoid-version \
+    -module \
+    $(NULL)
 
 libsss_simple_la_SOURCES = \
     src/providers/simple/simple_access_check.c \
