@@ -268,6 +268,7 @@ if HAVE_CMOCKA
         test_dp_builtin \
         test_ipa_dn \
         simple-access-tests \
+        test_inotify \
         $(NULL)
 
 if HAVE_LIBRESOLV
@@ -944,6 +945,7 @@ libsss_util_la_SOURCES = \
     src/util/string_utils.c \
     src/util/become_user.c \
     src/util/util_watchdog.c \
+    src/util/inotify.c \
     $(NULL)
 libsss_util_la_CFLAGS = \
     $(AM_CFLAGS) \
@@ -2995,6 +2997,21 @@ test_ipa_dn_LDFLAGS = \
     -Wl,-wrap,_tevent_add_timer \
     $(NULL)
 test_ipa_dn_LDADD = \
+    $(CMOCKA_LIBS) \
+    $(SSSD_LIBS) \
+    $(SSSD_INTERNAL_LTLIBS) \
+    $(LIBADD_DL) \
+    libsss_test_common.la \
+    $(NULL)
+
+test_inotify_SOURCES = \
+    src/util/inotify.c \
+    src/tests/cmocka/test_inotify.c \
+    $(NULL)
+test_inotify_CFLAGS = \
+    $(AM_CFLAGS) \
+    $(NULL)
+test_inotify_LDADD = \
     $(CMOCKA_LIBS) \
     $(SSSD_LIBS) \
     $(SSSD_INTERNAL_LTLIBS) \
