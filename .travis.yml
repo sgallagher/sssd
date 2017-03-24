@@ -1,0 +1,81 @@
+language: c
+compiler: gcc
+before_script: autoreconf -if
+sudo: false
+dist: trusty
+script: /bin/true
+
+env:
+  global:
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+  - secure: "hsr4RJDmhxPDRB1hM4vOA4K5ar/FvUMW8wN2ul+xC3eGtCZn5FHc0PBbhJJUf1BK31mHg+kG1YBk1ZrgMWPYsh6ck0fkb/tMinUt6gLISZimZOym7huIGAwZ6Nefp2w+08g5bOQkzSJUQMR4fQXhnb6M6xhnwIx265pD4bLpvRFL/EfZEqV+pw/UpjNxfN6IR1bqdVy9p9MxgYvAMY1927CdqHoflGo2g6pSXU/gMxNpS2MEQI2nm8P4lOH/ZuV98mY6m4byxhmJ3jws9Wy+K1yiSM1xe843i49bRn7R7W4lOa/uVCSJDK09uJ4+fX+QMen0n90JspzZxf6klVNQ5DcVQZX5AcscVkcLZxpcm2gyqOOtpVG/Roaf9/m8WjT1nPSrtolRSEn5CAuiZSxMPpZwNkH2/NHG7sVVv1O3K6VMondOHfZ/EALBLow5zn/LlDu7irlOeI94f2koZtIT/xGE4aj4Sla6VKLLmuH8dyD0zrvbwu/y20I1pGNGFrfDStXeD+a8+qd6MvaJRrN0UDXz6H65O6+LligZlYmwG02AveYEGSY4li1xDCvo5odZ40O6eVp+ozkIa00kZOXfe41+eF16hY0qE3ILEX2izqrwS8xuA8Yupv0VWppfWgczpBVXWbRb08Uz9QYvx/Yoj9CzDMz401NFrp67fjCuz7E="
+
+
+addons:
+  apt:
+    packages:
+    - autopoint
+    - cifs-utils
+    - debhelper
+    - dh-apparmor
+    - dh-autoreconf
+    - dh-python
+    - dh-systemd
+    - dnsutils
+    - docbook-xml
+    - docbook-xsl
+    - dpkg-dev
+    - krb5-config
+    - libaugeas-dev
+    - libc-ares-dev
+    - libcollection-dev
+    - libdbus-1-dev
+    - libdhash-dev
+    - libglib2.0-dev
+    - libhttp-parser-dev
+    - libini-config-dev
+    - libjansson-dev
+    - libkeyutils-dev
+    - libkrb5-dev
+    - libldap2-dev
+    - libldb-dev
+    - libltdl-dev
+    - libnfsidmap-dev
+    - libnl-3-dev
+    - libnl-route-3-dev
+    - libnspr4-dev
+    - libnss-wrapper
+    - libnss3-dev
+    - libpam0g-dev
+    - libpcre3-dev
+    - libpopt-dev
+    - libsasl2-dev
+    - libselinux1-dev
+    - libsemanage1-dev
+    - libsmbclient-dev
+    - libsystemd-dev
+    - libtalloc-dev
+    - libtdb-dev
+    - libtevent-dev
+    - libuid-wrapper
+    - libxml2-utils
+    - lsb-release
+    - python-dev
+    - python-setuptools
+    - python3-dev
+    - python3-setuptools
+    - quilt
+    - samba-dev
+    - systemd
+    - xml-core
+    - xsltproc
+  coverity_scan:
+    project:
+      name: "sgallagher/sssd"
+      description: "Build submitted via Travis CI"
+    notification_email: sgallagh@redhat.com
+    build_command_prepend: "autoreconf -if && ./configure --enable-krb5-locator-plugin 	--datadir=/usr/share/ 	--with-environment-file=/etc/default/sssd 	--with-ldb-lib-dir=/usr/lib64/ldb/modules/ldb 	--with-krb5-plugin-path=/usr/lib64/krb5/plugins/libkrb5 	--enable-nsslibdir=/lib64 	--enable-pammoddir=/lib64/security 	--disable-static 	--disable-rpath 	--with-autofs 	--with-ssh 	--with-initscript=systemd --with-systemdunitdir=/lib/systemd/system 	--with-sudo && make clean"
+    build_command:   "make -j 4"
+    branch_pattern: coverity_scan
+
