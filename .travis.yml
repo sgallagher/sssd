@@ -45,7 +45,6 @@ addons:
     - libnl-3-dev
     - libnl-route-3-dev
     - libnspr4-dev
-    - libnss-wrapper
     - libnss3-dev
     - libpam0g-dev
     - libpcre3-dev
@@ -54,11 +53,9 @@ addons:
     - libselinux1-dev
     - libsemanage1-dev
     - libsmbclient-dev
-    - libsystemd-dev
     - libtalloc-dev
     - libtdb-dev
     - libtevent-dev
-    - libuid-wrapper
     - libxml2-utils
     - lsb-release
     - python-dev
